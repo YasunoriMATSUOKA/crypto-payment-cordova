@@ -1,0 +1,185 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+  <script src="components/loader.js"></script>
+  <script src="lib/onsenui/js/onsenui.min.js"></script>
+
+  <link rel="stylesheet" href="components/loader.css">
+  <link rel="stylesheet" href="lib/onsenui/css/onsenui.css">
+  <link rel="stylesheet" href="lib/onsenui/css/onsen-css-components.css">
+  <link rel="stylesheet" href="css/style.css">
+
+  <script src="nem-sdk.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script type="text/javascript" src="crypto-js.js"></script>
+  <script src="jquery.qrcode.min.js"></script>
+  <script src="nem-sdk-helper.js"></script>
+  <script type="text/javascript" src="https://unpkg.com/ccxt@1.20.18/dist/ccxt.browser.js"></script>
+  <script src="main.js"></script>
+
+</head>
+<body>
+  <ons-page>
+    <ons-toolbar>
+      <div class="center" id="toolbar-title"></div>
+    </ons-toolbar>
+    <ons-tabbar position="auto">
+      <ons-tab label="ホーム" page="home.html" active icon="home">
+      </ons-tab>
+      <ons-tab label="設定" page="setting.html" icon="cog">
+      </ons-tab>
+    </ons-tabbar>
+  </ons-page>
+
+  <ons-template id="home.html">
+    <ons-page id="home-page">
+      <table>
+        <tr>
+          <th>取引所選択</th>
+          <th>通貨選択</th>
+        </tr>
+        <tr>
+          <td>
+            <ons-select>
+              <select id="paymentExchange">
+                <option value="zaif">Zaif</option>
+              </select>
+            </ons-select>
+          </td>
+          <td>
+            <ons-select>
+              <select id="paymentCurrency">
+                <option value="XEM">XEM</option>
+              </select>
+            </ons-select>
+          </td>
+        </tr>
+        <tr>
+          <th>金額</th>
+          <th>通貨単位</th>
+        </tr>
+        <tr>
+          <td>
+            <ons-input id="paymentJpyPrice" type="number" modifier="underbar" placeholder="金額を入力" float>
+          </td>
+          <td>
+            円
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <ons-button onclick="executePayment('QrAndExchange')">QR表示&日本円に交換</ons-button>
+          </td>
+          <td>
+            <ons-button onclick="executePayment('')">QR表示のみ</ons-button>
+          </td>
+        </tr>
+      </table>
+      <table>
+        <tr>
+          <th>レート</th>
+          <th></th>
+          <th>数量</th>
+          <th></th>
+        </tr>
+        <tr>
+          <td id="lastRate"></td>
+          <td id="lastRateUnit">円/XEM</td>
+          <td id="invoiceAmount"></td>
+          <td id="invoiceAmountUnit">XEM</td>
+        </tr>
+      </table>
+      <table>
+        <tr>
+          <th>請求QRコード</th>
+        </tr>
+        <tr>
+          <td>
+            <div id="qrInvoice"></div>
+          </td>
+        </tr>
+      </table>
+      <ons-button onclick="clear()">クリア</ons-button>
+    </ons-page>
+  </ons-template>
+
+  <ons-template id="setting.html">
+    <ons-page id="setting-page">
+      <p><table>
+        <tr>
+          <th>取引所API設定</th>
+          <th></th>
+        </tr>
+        <tr>
+          <td>取引所選択</td>
+          <td>
+            <ons-select>
+              <select id="settingExchange">
+                <option value="zaif">Zaif</option>
+              </select>
+            </ons-select>
+          </td>
+        </tr>
+        <tr>
+          <td>APIキー</td>
+          <td>
+            <ons-input id="settingApiKey" type="text" modifier="underbar" placeholder="APIキーを入力" float></ons-input>
+          </td>
+        </tr>
+        <tr>
+          <td>APIシークレット</td>
+          <td>
+            <ons-input id="settingApiSecret" type="password" modifier="underbar" placeholder="APIシークレットを入力" float></ons-input>
+          </td>
+        </tr>
+      </table>
+      <ons-button onclick="testAndSaveApi()">API情報を保存</ons-button></p>
+      <p><table>
+        <tr>
+          <th>アドレス設定</th>
+          <th></th>
+        </tr>
+        <tr>
+          <td>通貨選択</td>
+          <td>
+            <ons-select>
+              <select id="settingCurrency">
+                <option value="XEM">XEM</option>
+              </select>
+            </ons-select>
+          </td>
+        </tr>
+        <tr>
+          <td>アドレス</td>
+          <td>
+            <ons-input id="settingDepositAddress" type="text" modifier="underbar" placeholder="アドレスを入力" float></ons-input>
+          </td>
+        </tr>
+        <tr>
+          <td>メッセージ</td>
+          <td>
+            <ons-input id="settingDepositMessage" type="text" modifier="underbar" placeholder="メッセージを入力" float></ons-input>
+          </td>
+        </tr>
+      </table>
+      <ons-button onclick="checkAndSaveDepositAddress()">アドレスとメッセージを保存</ons-button><br></p>
+      <p><ons-button onclick="clearAllSetting()">全ての設定情報を削除</ons-button></p>
+    </ons-page>
+  </ons-template>
+
+  <ons-modal direction="up">
+    <div style="text-align: center">
+      <p>
+        <ons-icon icon="md-spinner" size="28px" spin></ons-icon> Loading...
+      </p>
+    </div>
+  </ons-modal>
+
+  <audio id="soundUnconfirmed">
+    <source src="money-drop1.mp3">
+  </audio>
+</body>
+</html>
