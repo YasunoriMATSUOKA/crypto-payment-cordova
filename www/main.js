@@ -9,7 +9,7 @@ const cryptoPaymentTemplatePaymentData = {
   "lastRate": 0.0000,
   "invoiceAmount": 0.0,
   "receivedJPY": 0.0,
-} //現時点では未使用
+}
 let password;
 const registerPassword = () => {
   ons.notification.prompt({
@@ -80,7 +80,6 @@ const decrypt = (encryptedMessage, key) => {
   const decryptedMessage = CryptoJS.AES.decrypt(encryptedMessage, key).toString(CryptoJS.enc.Utf8);
   return decryptedMessage;
 }
-//API情報の動作検証をして保存
 const testAndSaveApi = (async function(){
   var modal = document.querySelector('ons-modal');
   modal.show();
@@ -124,7 +123,6 @@ const testAndSaveApi = (async function(){
   apiKey = "";
   secret = "";
 })
-//API情報のlocalStorgeへの保存
 const saveApi = async (exchange, apiKey, secret) => {
   let encryptedApiKey = encrypt(apiKey, password);
   let encryptedSecret = encrypt(secret, password);
@@ -142,7 +140,6 @@ const saveApi = async (exchange, apiKey, secret) => {
   saveApiData = "";
   cryptoPaymentData = "";
 }
-//取引所への入金アドレス、メッセージのチェック(と保存)
 const checkAndSaveDepositAddress = function () {
   const exchange = document.getElementById("settingExchange").value;
   const currency = document.getElementById("settingCurrency").value;
@@ -169,7 +166,6 @@ const checkAndSaveDepositAddress = function () {
     saveDepositAddress(exchange, currency, depositAddress, depositMessage);
   }
 }
-//取引所への入金情報をlocalStorageへ保存
 const saveDepositAddress = async (exchange, currency, depositAddress, depositMessage) => {
   let saveDepositAddressData = {};
   saveDepositAddressData[currency] = {"depositAddress": depositAddress, "depositMessage": depositMessage};
@@ -212,13 +208,18 @@ const getDepositMessage = (exchange, currency) => {
   return depositMessage;
 }
 const showHistoryTable = () => {
-  const historyData = JSON.parse(localStorage.cryptoPaymentHistoryData);
-  if(historyData.length > 0){
-    let tempHtml = "";
-    historyData.forEach((element) => {
-      tempHtml = tempHtml + "<table><tr><th>" + element.time + "</th>" + "</tr>" + "<tr>" + "<td>" + "請求額" + "</td>" + "<td>" + element.invoiceJpy + "円</td>" + "</tr>" + "<tr>" + "<td>" + "レート" + "</td>" + "<td>" + element.lastRate + "円/XEM</td>" + "</tr>" + "<tr>" + "<td>" + "請求量" + "</td>" + "<td>" + element.invoiceAmount + "XEM</td>" + "</tr>" + "<tr>" + "<td>" + "受取金額" + "</td>" + "<td>" + element.receivedJPY + "円</td>" + "</tr>" + "<tr>" + "<td>" + "ハッシュ" + "</td>" + "<td>" + element.txHash + "</td>" + "</tr>" + "</table>";
-      document.getElementById("historyTable").innerHTML = tempHtml
-    });
+  if(localStorage.cryptoPaymentHistoryData){
+    const historyData = JSON.parse(localStorage.cryptoPaymentHistoryData);
+    if(historyData.length > 0){
+      let tempHtml = "";
+      historyData.forEach((element) => {
+        tempHtml = tempHtml + "<table><tr><th>" + element.time + "</th>" + "</tr>" + "<tr>" + "<td>" + "請求額" + "</td>" + "<td>" + element.invoiceJpy + "円</td>" + "</tr>" + "<tr>" + "<td>" + "レート" + "</td>" + "<td>" + element.lastRate + "円/XEM</td>" + "</tr>" + "<tr>" + "<td>" + "請求量" + "</td>" + "<td>" + element.invoiceAmount + "XEM</td>" + "</tr>" + "<tr>" + "<td>" + "受取金額" + "</td>" + "<td>" + element.receivedJPY + "円</td>" + "</tr>" + "<tr>" + "<td>" + "ハッシュ" + "</td>" + "<td>" + element.txHash + "</td>" + "</tr>" + "</table>";
+      });
+      document.getElementById("historyTable").innerHTML = tempHtml;
+    }
+  }else{
+    ons.notification.toast("履歴情報はまだありません。", {timeout: 2000});
+    document.getElementById("historyTable").textContent = "";
   }
 }
 
@@ -283,9 +284,6 @@ const Payment = class {
   showLoadingImage(){
     document.getElementById("lastRate").innerHTML = '<ons-icon size="16px" spin icon="md-spinner"></ons-icon>';
     document.getElementById("invoiceAmount").innerHTML = '<ons-icon size="16px" spin icon="md-spinner"></ons-icon>'
-  }
-  async fetchTickerConfig(){
-    //未使用
   }
   async fetchTickerInfo(){
     const jsonResult = await this.exchangeObject.fetchTicker(this.currencyPair);
@@ -449,10 +447,4 @@ const executePayment = async (mode) => {
   }catch{
     ons.notification.alert("エラーが発生しました！送金状況のモニターに失敗しました。");
   }
-}
-
-const clear = () => {
-  document.getElementById("paymentJpyPrice").value = 0;
-  document.getElementById("lastRate").textContent = "";
-  document.getElementById("invoiceAmount").textContent = "";
 }
