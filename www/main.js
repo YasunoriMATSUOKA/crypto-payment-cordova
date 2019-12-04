@@ -1,9 +1,9 @@
 'use strict'
 const nem = require('nem-sdk').default;
-const proxy = "https://cors-anywhere.herokuapp.com/"
+const proxy = "https://cors-anywhere.herokuapp.com/";
 const cryptoPaymentTemplateData = {"api": {}, "deposit": {}}
-const cryptoPaymentTemplateHistoryData = [];  //現時点では未使用
 const cryptoPaymentTemplatePaymentData = {
+  "time": "",
   "txHash": "",
   "invoiceJpy": 0,
   "lastRate": 0.0000,
@@ -49,13 +49,13 @@ const checkPassword = () => {
           }else{
             password = "";
             modal.hide();
-            ons.notification.toast("エラーが発生しました！/nパスワードが間違っているか、/nサーバーとの通信に失敗しているようです。", {timeout: 2000});
+            ons.notification.toast("エラーが発生しました！パスワードが間違っているか、サーバーとの通信に失敗しているようです。", {timeout: 2000});
             checkPassword();
           }
         }catch{
           password = "";
           modal.hide();
-          ons.notification.toast("エラーが発生しました！/nパスワードが間違っているか、/nサーバーとの通信に失敗しているようです。", {timeout: 2000});
+          ons.notification.toast("エラーが発生しました！パスワードが間違っているか、サーバーとの通信に失敗しているようです。", {timeout: 2000});
           checkPassword();
         }
       }
@@ -63,10 +63,13 @@ const checkPassword = () => {
   });
 }
 const initialProcedure = () => {
-  if(! localStorage.cryptoPaymentData){
+  if(! JSON.parse(localStorage.cryptoPaymentData).api.zaif){
     registerPassword();
   }else{
     checkPassword();
+  }
+  if(! localStorage.cryptoPaymentHistoryData){
+    localStorage.cryptoPaymentHistoryData = "[]";
   }
 }
 const encrypt = (message, key) => {
@@ -82,8 +85,8 @@ const testAndSaveApi = (async function(){
   var modal = document.querySelector('ons-modal');
   modal.show();
   let exchange = document.getElementById("settingExchange").value;
-  let apiKey = document.getElementById("settingApiKey").value;
-  let secret = document.getElementById("settingApiSecret").value;
+  let apiKey = document.getElementById("settingApiKey").value.trim();
+  let secret = document.getElementById("settingApiSecret").value.trim();
   let flagApi = true;
   let flagSave = true;
   if((! apiKey) || (! secret)){
@@ -98,18 +101,16 @@ const testAndSaveApi = (async function(){
     });
     const balance = await exchangeObject.fetchBalance().catch((err)=>{
       flagApi = false;
-      console.log(err);
+      console.error(err);
       modal.hide();
-      ons.notification.alert("エラーが発生しました！\nAPIキーかAPIシークレットに誤りがあるか、\nサーバーに問題が生じています。\nAPIキーとAPIシークレットを再確認の上、リトライしてください。\n" + err);
+      ons.notification.alert("エラーが発生しました！APIキーかAPIシークレットに誤りがあるか、サーバーに問題が生じています。APIキーとAPIシークレットを再確認の上、リトライしてください。" + err);
     })
     if(flagApi){
-      console.log("Saving API Info to localStorage.");
-      console.log(balance);
       await saveApi(exchange, apiKey, secret).catch((err)=>{
         flagSave = false;
-        console.log(err);
+        console.error(err);
         modal.hide();
-        ons.notification.alert("エラーが発生しました！\nローカルストレージへのAPI情報書き込みに失敗しました。");
+        ons.notification.alert("エラーが発生しました！ローカルストレージへのAPI情報書き込みに失敗しました。");
       })
       if(flagSave){
         document.getElementById("settingApiKey").value = "";
@@ -126,23 +127,16 @@ const testAndSaveApi = (async function(){
 //API情報のlocalStorgeへの保存
 const saveApi = async (exchange, apiKey, secret) => {
   let encryptedApiKey = encrypt(apiKey, password);
-  console.log(encryptedApiKey);
   let encryptedSecret = encrypt(secret, password);
-  console.log(encryptedSecret);
   let saveApiData = {"apiKey": encryptedApiKey, "secret": encryptedSecret};
-  console.log(JSON.stringify(saveApiData));
   let cryptoPaymentData;
   if(! localStorage.cryptoPaymentData){
-    console.log("localStorage Empty");
     cryptoPaymentData = cryptoPaymentTemplateData;
   }else{
-    console.log("localStorage Already Set");
     cryptoPaymentData = JSON.parse(localStorage.cryptoPaymentData);
   }
-  console.log(cryptoPaymentData);
   cryptoPaymentData.api[exchange] = saveApiData;
   localStorage.cryptoPaymentData = JSON.stringify(cryptoPaymentData);
-  console.log("localStorage.cryptoPaymentData: " + localStorage.cryptoPaymentData);
   encryptedApiKey = "";
   encryptedSecret = "";
   saveApiData = "";
@@ -151,36 +145,27 @@ const saveApi = async (exchange, apiKey, secret) => {
 //取引所への入金アドレス、メッセージのチェック(と保存)
 const checkAndSaveDepositAddress = function () {
   const exchange = document.getElementById("settingExchange").value;
-  console.log(exchange);
   const currency = document.getElementById("settingCurrency").value;
-  console.log(currency);
   let depositAddress;
   let depositMessage;
   let flagAddress = false;
   let flagMessage = false;
   if(currency === "XEM"){
     const rawDepositAddress = document.getElementById("settingDepositAddress").value;
-    console.log(rawDepositAddress);
     depositAddress = NemSdkHelper.getAddress(rawDepositAddress);
-    console.log(depositAddress);
-    depositMessage = document.getElementById("settingDepositMessage").value;
-    console.log(depositMessage);
+    depositMessage = document.getElementById("settingDepositMessage").value.trim();
     if (depositAddress.length >= 40) {
       flagAddress = true;
     }else{
-      ons.notification.alert("エラーが発生しました！/nアドレスが不適切です。/n適切なアドレスを入力してください。");
+      ons.notification.alert("エラーが発生しました！アドレスが不適切です。適切なアドレスを入力してください。");
     }
     if(depositMessage.length > 0){
       flagMessage = true;
     }else{
-      ons.notification.alert("エラーが発生しました！/nメッセージが入力されていません。/n適切なメッセージを入力してください。");
+      ons.notification.alert("エラーが発生しました！メッセージが入力されていません。適切なメッセージを入力してください。");
     }
   }
   if(flagAddress || flagMessage){
-    console.log(exchange);
-    console.log(currency);
-    console.log(depositAddress);
-    console.log(depositMessage);
     saveDepositAddress(exchange, currency, depositAddress, depositMessage);
   }
 }
@@ -188,7 +173,6 @@ const checkAndSaveDepositAddress = function () {
 const saveDepositAddress = async (exchange, currency, depositAddress, depositMessage) => {
   let saveDepositAddressData = {};
   saveDepositAddressData[currency] = {"depositAddress": depositAddress, "depositMessage": depositMessage};
-  console.log(saveDepositAddressData);
   let cryptoPaymentData;
   if(! localStorage.cryptoPaymentData){
     cryptoPaymentData = cryptoPaymentTemplateData;
@@ -197,16 +181,17 @@ const saveDepositAddress = async (exchange, currency, depositAddress, depositMes
   }
   cryptoPaymentData.deposit[exchange] = saveDepositAddressData;
   localStorage.cryptoPaymentData = JSON.stringify(cryptoPaymentData);
-  console.log(localStorage.cryptoPaymentData);
   ons.notification.alert("アドレス情報の登録が完了しました。");
   document.getElementById("settingDepositAddress").value = "";
   document.getElementById("settingDepositMessage").value = "";
 }
 const clearAllSetting = async () => {
-  console.log("clear");
-  console.log(localStorage.cryptoPaymentData);
   localStorage.removeItem("cryptoPaymentData");
   ons.notification.alert("全ての設定情報を削除しました！");
+}
+const clearAllHistory = async () => {
+  localStorage.removeItem("cryptoPaymentHistoryData");
+  ons.notification.alert("全ての履歴情報を削除しました！")
 }
 const getApiKey = (exchange) => {
   const encryptedApiKey = JSON.parse(localStorage.cryptoPaymentData).api[exchange]["apiKey"];
@@ -226,6 +211,16 @@ const getDepositMessage = (exchange, currency) => {
   const depositMessage = JSON.parse(localStorage.cryptoPaymentData).deposit[exchange][currency]["depositMessage"];
   return depositMessage;
 }
+const showHistoryTable = () => {
+  const historyData = JSON.parse(localStorage.cryptoPaymentHistoryData);
+  if(historyData.length > 0){
+    let tempHtml = "";
+    historyData.forEach((element) => {
+      tempHtml = tempHtml + "<table><tr><th>" + element.time + "</th>" + "</tr>" + "<tr>" + "<td>" + "請求額" + "</td>" + "<td>" + element.invoiceJpy + "円</td>" + "</tr>" + "<tr>" + "<td>" + "レート" + "</td>" + "<td>" + element.lastRate + "円/XEM</td>" + "</tr>" + "<tr>" + "<td>" + "請求量" + "</td>" + "<td>" + element.invoiceAmount + "XEM</td>" + "</tr>" + "<tr>" + "<td>" + "受取金額" + "</td>" + "<td>" + element.receivedJPY + "円</td>" + "</tr>" + "<tr>" + "<td>" + "ハッシュ" + "</td>" + "<td>" + element.txHash + "</td>" + "</tr>" + "</table>";
+      document.getElementById("historyTable").innerHTML = tempHtml
+    });
+  }
+}
 
 ons.ready(function() {
   console.log("Onsen UI is ready!");
@@ -238,6 +233,9 @@ document.addEventListener('show', function(event) {
 
   if (page.matches('#home-page')) {
     titleElement.innerHTML = 'ホーム';
+  } else if (page.matches('#history-page')) {
+    titleElement.innerHTML = '履歴';
+    showHistoryTable();
   } else if (page.matches('#setting-page')) {
     titleElement.innerHTML = '設定';
   }
@@ -250,6 +248,14 @@ if (ons.platform.isIPhoneX()) {
 
 const Payment = class {
   constructor(exchange, currency, jpyPrice){
+    this.now = new Date();
+    this.year = this.now.getFullYear();
+    this.month = this.now.getMonth()+1;
+    this.date = this.now.getDate();
+    this.hour = this.now.getHours();
+    this.min = this.now.getMinutes();
+    this.sec = this.now.getSeconds();
+    this.time = this.year + "/" + this.month + "/" + this.date + " " + this.hour + ":" + this.min + ":" + this.sec;
     this.exchange = exchange;
     this.exchangeClass = ccxt[exchange];
     this.exchangeObject = new this.exchangeClass({
@@ -306,7 +312,6 @@ const Payment = class {
     const invoiceAmount = (Math.round(rawInvoiceAmount * 10)) / 10;
     console.log("const invoiceAmount:" + invoiceAmount);
     this.invoiceAmount = invoiceAmount;
-    console.log("invoiceAmount:" + this.invoiceAmount);
     document.getElementById("invoiceAmount").textContent = this.invoiceAmount;
 
     this.bids = this.orderBookInfo.bids;
@@ -328,6 +333,7 @@ const Payment = class {
     this.exchangeObject.apiKey = "";
     this.exchangeObject.secret   = "";
     this.sellResult = jsonResult;
+    this.receivedJpy = this.sellResult.info.return.received;
     const stringResult = JSON.stringify(jsonResult);
     console.log(stringResult);
     return jsonResult;
@@ -354,7 +360,6 @@ const Payment = class {
     setTimeout(()=>{
       try{
         connector.close();
-        ons.notification.toast("WebSocket通信がタイムアウトしました！リトライしてください。", {timeout: 2000});
         document.getElementById("qrInvoice").textContent = "";
       }catch{
         (error) => {
@@ -383,6 +388,22 @@ const Payment = class {
                 const targetSound = document.getElementById("soundUnconfirmed");
                 targetSound.play();
                 this.txHash = res.meta.hash.data;
+                cryptoPaymentTemplatePaymentData.time = this.time;
+                cryptoPaymentTemplatePaymentData.txHash = this.txHash;
+                cryptoPaymentTemplatePaymentData.invoiceJpy = this.jpyPrice;
+                cryptoPaymentTemplatePaymentData.lastRate = this.lastRate;
+                cryptoPaymentTemplatePaymentData.invoiceAmount = this.invoiceAmount;
+                cryptoPaymentTemplatePaymentData.receivedJPY = this.receivedJpy;
+                const tempHistoryData = JSON.parse(localStorage.cryptoPaymentHistoryData);
+                tempHistoryData.unshift(cryptoPaymentTemplatePaymentData);
+                localStorage.cryptoPaymentHistoryData = JSON.stringify(tempHistoryData);
+                console.log(localStorage.cryptoPaymentHistoryData);
+                cryptoPaymentTemplatePaymentData.time = "";
+                cryptoPaymentTemplatePaymentData.txHash = "";
+                cryptoPaymentTemplatePaymentData.invoiceJpy = 0;
+                cryptoPaymentTemplatePaymentData.lastRate = 0;
+                cryptoPaymentTemplatePaymentData.invoiceAmount = 0;
+                cryptoPaymentTemplatePaymentData.receivedJPY = 0;
                 NemSdkHelper.txReceiveCallBack(res);
                 document.getElementById("qrInvoice").textContent = "";
                 return res;
@@ -407,15 +428,27 @@ const executePayment = async (mode) => {
   payment.showLoadingImage();
   var modal = document.querySelector('ons-modal');
   modal.show();
-  await payment.fetchTickerInfo();
-  await payment.fetchOrderBookInfo();
+  try{
+    await payment.fetchTickerInfo();
+    await payment.fetchOrderBookInfo();
+  }catch{
+    ons.notification.alert("エラーが発生しました！価格、板情報の取得に失敗しました。");
+  }
   payment.calculatePayment();
   if(mode === "QrAndExchange"){
-    await payment.sell();
+    try{
+      await payment.sell();
+    }catch{
+      ons.notification.alert("エラーが発生しました！売却に失敗しました。");
+    }
   }
   modal.hide();
   payment.showQr();
-  await payment.receive();
+  try{
+    await payment.receive();
+  }catch{
+    ons.notification.alert("エラーが発生しました！送金状況のモニターに失敗しました。");
+  }
 }
 
 const clear = () => {

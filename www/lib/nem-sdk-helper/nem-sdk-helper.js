@@ -101,22 +101,18 @@ NemSdkHelper = (() => {
       const message = rawMessage
       const endpoint = nem.model.objects.create('endpoint')(endpointUrl, 7890);
       const result = await nem.com.requests.account.transactions.unconfirmed(endpoint, address).then((res) => {
-        console.log(JSON.stringify(res));
         return res;
       }).catch((error) => {
         console.error(JSON.stringify(error));
       });
       return result;
     },
-    //MonitorUnconfirmedTxWithPolling
+    //MonitorUnconfirmedTxWithPolling(未完成)
     monitorUnconfirmedTxPolling: async (rawAddress, rawMessage, invoiceAmount, endpointUrl) => {
-      console.log("monitorUnconfirmedTxPolling start");
       const intAmount = Math.round(invoiceAmount * 10)*100000;
-      console.log(intAmount);
       const result = await NemSdkHelper.getUnconfirmedTx(rawAddress, rawMessage, endpointUrl);
-      console.log(result);
     },
-    //Get all mosaic balance
+    //Get all mosaic balance(未完成)
     getAllBalance: async (rawAddress, endpointUrl) => {
       const address = NemSdkHelper.getAddress(rawAddress);
       const endpoint = nem.model.objects.create('endpoint')(endpointUrl, 7891);
@@ -211,6 +207,7 @@ NemSdkHelper = (() => {
     },
     //When Tx is received this function will be executed.
     txReceiveCallBack: (res) => {
+      /*
       console.log("hash", res.meta.hash.data);
       console.log("intAmount", res.transaction.amount);
       console.log("amount", res.transaction.amount / 1000000);
@@ -220,6 +217,7 @@ NemSdkHelper = (() => {
       console.log("senderAddress", nem.model.address.toAddress(res.transaction.signer, nem.model.network.data.mainnet.id));
       console.log("messagePayload", res.transaction.message);
       console.log("message", nem.utils.format.hexToUtf8(res.transaction.message.payload));
+      */
     },
     //Receive Tx (XEM only, with no encrypted message)
     receiveTx: async (rawAddress, rawAmount, rawMessage) => {
@@ -232,9 +230,7 @@ NemSdkHelper = (() => {
       ];
       const endpointUrl = wsNodes[Math.floor(Math.random() * wsNodes.length)];
       const endpoint = nem.model.objects.create("endpoint")(endpointUrl, nem.model.nodes.websocketPort);
-      console.log(JSON.stringify(endpoint));
       const connector = nem.com.websockets.connector.create(endpoint, address);
-      console.log(JSON.stringify(connector));
       connector.connect().then(() => {
           console.log("Connected");
           nem.com.websockets.subscribe.errors(

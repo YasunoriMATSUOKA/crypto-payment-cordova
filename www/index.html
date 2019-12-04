@@ -12,11 +12,11 @@
   <link rel="stylesheet" href="lib/onsenui/css/onsen-css-components.css">
   <link rel="stylesheet" href="css/style.css">
 
-  <script src="nem-sdk.js"></script>
+  <script src="lib/nem-sdk/nem-sdk.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-  <script type="text/javascript" src="crypto-js.js"></script>
-  <script src="jquery.qrcode.min.js"></script>
-  <script src="nem-sdk-helper.js"></script>
+  <script type="text/javascript" src="lib/crypto-js/crypto-js.js"></script>
+  <script src="lib/jquery/jquery.qrcode.min.js"></script>
+  <script src="lib/nem-sdk-helper/nem-sdk-helper.js"></script>
   <script type="text/javascript" src="https://unpkg.com/ccxt@1.20.18/dist/ccxt.browser.js"></script>
   <script src="main.js"></script>
 
@@ -28,6 +28,8 @@
     </ons-toolbar>
     <ons-tabbar position="auto">
       <ons-tab label="ホーム" page="home.html" active icon="home">
+      </ons-tab>
+      <ons-tab label="履歴" page="history.html" icon="list">
       </ons-tab>
       <ons-tab label="設定" page="setting.html" icon="cog">
       </ons-tab>
@@ -106,6 +108,12 @@
     </ons-page>
   </ons-template>
 
+  <ons-template id="history.html">
+    <ons-page id="history-page">
+      <div id="historyTable"></div>
+    </ons-page>
+  </ons-template>
+
   <ons-template id="setting.html">
     <ons-page id="setting-page">
       <p><table>
@@ -166,7 +174,8 @@
         </tr>
       </table>
       <ons-button onclick="checkAndSaveDepositAddress()">アドレスとメッセージを保存</ons-button><br></p>
-      <p><ons-button onclick="clearAllSetting()">全ての設定情報を削除</ons-button></p>
+      <p><ons-button onclick="clearAllSetting()">API情報を全て削除</ons-button></p>
+      <p><ons-button onclick="clearAllHistory()">履歴情報を全て削除</ons-button></p>
     </ons-page>
   </ons-template>
 
@@ -179,7 +188,7 @@
   </ons-modal>
 
   <audio id="soundUnconfirmed">
-    <source src="money-drop1.mp3">
+    <source src="asset/money-drop1.mp3">
   </audio>
 </body>
 </html>
