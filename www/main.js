@@ -63,7 +63,9 @@ const checkPassword = () => {
   });
 }
 const initialProcedure = () => {
-  if(! JSON.parse(localStorage.cryptoPaymentData).api.zaif){
+  if(! localStorage.cryptoPaymentData){
+    registerPassword();
+  }else if(JSON.parse(localStorage.cryptoPaymentData).api = {}){
     registerPassword();
   }else{
     checkPassword();
@@ -382,7 +384,7 @@ const Payment = class {
             if (nem.utils.format.hexToUtf8(res.transaction.message.payload) === message) {
               if (res.transaction.amount === intAmount) {
                 connector.close();
-                ons.notification.alert("着金を確認しました。\nお支払いありがとう\nございました。");
+                ons.notification.alert("着金を確認しました。お支払いありがとうございました。");
                 const targetSound = document.getElementById("soundUnconfirmed");
                 targetSound.play();
                 this.txHash = res.meta.hash.data;
