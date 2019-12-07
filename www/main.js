@@ -65,7 +65,7 @@ const checkPassword = () => {
 const initialProcedure = () => {
   if(! localStorage.cryptoPaymentData){
     registerPassword();
-  }else if(JSON.parse(localStorage.cryptoPaymentData).api = {}){
+  }else if(JSON.parse(localStorage.cryptoPaymentData).api === {}){
     registerPassword();
   }else{
     checkPassword();
