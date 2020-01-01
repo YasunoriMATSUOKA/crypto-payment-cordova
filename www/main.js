@@ -10,6 +10,21 @@ const cryptoPaymentTemplatePaymentData = {
   "invoiceAmount": 0.0,
   "receivedJPY": 0.0,
 }
+const htmlEscape = (string) => {
+  if (typeof string !== 'string') {
+    return string;
+  }
+  return string.replace(/[&'`"<>]/g, function (match) {
+    return {
+      '&': '&amp;',
+      "'": '&#x27;',
+      '`': '&#x60;',
+      '"': '&quot;',
+      '<': '&lt;',
+      '>': '&gt;',
+    } [match]
+  });
+};
 let password;
 const registerPassword = () => {
   ons.notification.prompt({
@@ -17,6 +32,7 @@ const registerPassword = () => {
     messageHTML: "API情報の暗号化に使用するパスワードを登録してください。",
     buttonLabel: "登録",
     animation: "default",
+    inputType: "password",
     callback: (str) => {
       password = str;
       ons.notification.toast("パスワード登録完了しました。", {timeout: 2000});
@@ -29,6 +45,7 @@ const checkPassword = () => {
     messageHTML: "既に登録済の暗号化されたAPI情報の復号に使用するパスワードを入力してください。",
     buttonLabel: "確認",
     animation: "default",
+    inputType: "password",
     callback: async (str) => {
       password = str
       var modal = document.querySelector('ons-modal');
