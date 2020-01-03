@@ -134,7 +134,12 @@ const testAndSaveApi = (async function(){
         document.getElementById("settingApiKey").value = "";
         document.getElementById("settingApiSecret").value = "";
         modal.hide();
-        ons.notification.alert("API情報の登録が完了しました。");
+        ons.notification.alert(
+          {
+            "message": "API情報の登録が完了しました。",
+            "title": "成功"
+          }
+        );
       }
     }
   }
@@ -196,17 +201,32 @@ const saveDepositAddress = async (exchange, currency, depositAddress, depositMes
   }
   cryptoPaymentData.deposit[exchange] = saveDepositAddressData;
   localStorage.cryptoPaymentData = JSON.stringify(cryptoPaymentData);
-  ons.notification.alert("アドレス情報の登録が完了しました。");
+  ons.notification.alert(
+    {
+      "message": "アドレス情報の登録が完了しました。",
+      "title": "成功"
+    }
+  );
   document.getElementById("settingDepositAddress").value = "";
   document.getElementById("settingDepositMessage").value = "";
 }
 const clearAllSetting = async () => {
   localStorage.removeItem("cryptoPaymentData");
-  ons.notification.alert("全ての設定情報を削除しました！");
+  ons.notification.alert(
+    {
+      "message": "全ての設定情報を削除しました！",
+      "title": "成功"
+    }
+  );
 }
 const clearAllHistory = async () => {
   localStorage.removeItem("cryptoPaymentHistoryData");
-  ons.notification.alert("全ての履歴情報を削除しました！")
+  ons.notification.alert(
+    {
+      "message": "全ての履歴情報を削除しました！",
+      "title": "完了"
+    }
+  );
 }
 const getApiKey = (exchange) => {
   const encryptedApiKey = JSON.parse(localStorage.cryptoPaymentData).api[exchange]["apiKey"];
@@ -401,7 +421,12 @@ const Payment = class {
             if (nem.utils.format.hexToUtf8(res.transaction.message.payload) === message) {
               if (res.transaction.amount === intAmount) {
                 connector.close();
-                ons.notification.alert("着金を確認しました。お支払いありがとうございました。");
+                ons.notification.alert(
+                  {
+                    "message":"着金を確認しました。お支払いありがとうございました。",
+                    "title": "成功"
+                  }
+                );
                 const targetSound = document.getElementById("soundUnconfirmed");
                 targetSound.play();
                 this.txHash = res.meta.hash.data;
