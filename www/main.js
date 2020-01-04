@@ -420,35 +420,37 @@ const Payment = class {
           if (res.transaction.recipient === address) {
             if (nem.utils.format.hexToUtf8(res.transaction.message.payload) === message) {
               if (res.transaction.amount === intAmount) {
-                connector.close();
-                ons.notification.alert(
-                  {
-                    "message":"着金を確認しました。お支払いありがとうございました。",
-                    "title": "成功"
-                  }
-                );
-                const targetSound = document.getElementById("soundUnconfirmed");
-                targetSound.play();
-                this.txHash = res.meta.hash.data;
-                cryptoPaymentTemplatePaymentData.time = this.time;
-                cryptoPaymentTemplatePaymentData.txHash = this.txHash;
-                cryptoPaymentTemplatePaymentData.invoiceJpy = this.jpyPrice;
-                cryptoPaymentTemplatePaymentData.lastRate = this.lastRate;
-                cryptoPaymentTemplatePaymentData.invoiceAmount = this.invoiceAmount;
-                cryptoPaymentTemplatePaymentData.receivedJPY = this.receivedJpy;
-                const tempHistoryData = JSON.parse(localStorage.cryptoPaymentHistoryData);
-                tempHistoryData.unshift(cryptoPaymentTemplatePaymentData);
-                localStorage.cryptoPaymentHistoryData = JSON.stringify(tempHistoryData);
-                console.log(localStorage.cryptoPaymentHistoryData);
-                cryptoPaymentTemplatePaymentData.time = "";
-                cryptoPaymentTemplatePaymentData.txHash = "";
-                cryptoPaymentTemplatePaymentData.invoiceJpy = 0;
-                cryptoPaymentTemplatePaymentData.lastRate = 0;
-                cryptoPaymentTemplatePaymentData.invoiceAmount = 0;
-                cryptoPaymentTemplatePaymentData.receivedJPY = 0;
-                NemSdkHelper.txReceiveCallBack(res);
-                document.getElementById("qrInvoice").textContent = "";
-                return res;
+                if (new Date(Date.UTC(2015, 2, 29, 0, 6, 25, 0) + (res.transaction.timeStamp * 1000)) > this.now) {
+                  connector.close();
+                  ons.notification.alert(
+                    {
+                      "message":"着金を確認しました。お支払いありがとうございました。",
+                      "title": "成功"
+                    }
+                  );
+                  const targetSound = document.getElementById("soundUnconfirmed");
+                  targetSound.play();
+                  this.txHash = res.meta.hash.data;
+                  cryptoPaymentTemplatePaymentData.time = this.time;
+                  cryptoPaymentTemplatePaymentData.txHash = this.txHash;
+                  cryptoPaymentTemplatePaymentData.invoiceJpy = this.jpyPrice;
+                  cryptoPaymentTemplatePaymentData.lastRate = this.lastRate;
+                  cryptoPaymentTemplatePaymentData.invoiceAmount = this.invoiceAmount;
+                  cryptoPaymentTemplatePaymentData.receivedJPY = this.receivedJpy;
+                  const tempHistoryData = JSON.parse(localStorage.cryptoPaymentHistoryData);
+                  tempHistoryData.unshift(cryptoPaymentTemplatePaymentData);
+                  localStorage.cryptoPaymentHistoryData = JSON.stringify(tempHistoryData);
+                  console.log(localStorage.cryptoPaymentHistoryData);
+                  cryptoPaymentTemplatePaymentData.time = "";
+                  cryptoPaymentTemplatePaymentData.txHash = "";
+                  cryptoPaymentTemplatePaymentData.invoiceJpy = 0;
+                  cryptoPaymentTemplatePaymentData.lastRate = 0;
+                  cryptoPaymentTemplatePaymentData.invoiceAmount = 0;
+                  cryptoPaymentTemplatePaymentData.receivedJPY = 0;
+                  NemSdkHelper.txReceiveCallBack(res);
+                  document.getElementById("qrInvoice").textContent = "";
+                  return res;
+                }
               }
             }
           }
